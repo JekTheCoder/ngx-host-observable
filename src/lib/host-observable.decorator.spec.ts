@@ -1,6 +1,6 @@
 import { Component, OnDestroy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { interval, tap } from 'rxjs';
+import { interval, Observable, tap } from 'rxjs';
 import { HostObservable } from './host-observable.decorator';
 
 export function delay(ms: number) {
@@ -11,7 +11,7 @@ export function delay(ms: number) {
 	selector: 'test',
 	template: '',
 })
-export class TestComponent implements OnDestroy {
+class TestComponent implements OnDestroy {
 	@HostObservable()
 	inter = interval(1000);
 	fn?: Function;
@@ -55,5 +55,14 @@ describe('HostObservable', () => {
 		await delay(1001);
 		fixture.destroy();
 		return expect(spy).toHaveBeenCalledTimes(1);
+	});
+
+	it('should can get observable', () => {
+		expect(component.inter).toBeDefined();
+		expect(component.inter).toBeInstanceOf(Observable);
+	});
+
+	afterEach(() => {
+		fixture.destroy();
 	});
 });

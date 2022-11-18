@@ -7,30 +7,33 @@ type AngularObject = Partial<OnDestroy> & {
 
 export function HostObservable(): PropertyDecorator {
 	return (target: AngularObject, propertyKey) => {
-		let lastPropery: Subscription | undefined;
+		let lastSub: Subscription | undefined;
+		let lastObservable$: Observable<unknown> | undefined;
 		let ngOnDestroy: Function | undefined;
 
 		Object.defineProperty(target, propertyKey, {
-			set: property => {
-				if (lastPropery) lastPropery.unsubscribe();
+			set: observable$ => {
+				if (lastSub) lastSub.unsubscribe();
 
-				if (!property || !(property instanceof Observable)) {
-					console.error(target, property);
+				if (!observable$ || !(observable$ instanceof Observable)) {
+					console.error(target, observable$);
 
 					throw new Error(
 						`Decorated property '${String(propertyKey)}' is not an Observable`
 					);
 				}
 
-				lastPropery = property.subscribe();
+				lastObservable$ = observable$;
+				lastSub = observable$.subscribe();
 			},
+			get: () => lastObservable$,
 		});
 
 		ngOnDestroy = target.ngOnDestroy;
 		const descriptor = {
 			value: function () {
 				ngOnDestroy?.apply(this);
-				lastPropery?.unsubscribe();
+				lastSub?.unsubscribe();
 			},
 		};
 
